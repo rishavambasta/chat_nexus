@@ -1,6 +1,11 @@
 # Build directories and artifacts
 build/
 bin/
+P2PChat
+test_p2p
+moc_*.cpp
+qrc_*.cpp
+moc_predefs.h
 *.o
 *.a
 *.so
