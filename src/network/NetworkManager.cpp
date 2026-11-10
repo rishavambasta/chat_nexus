@@ -3,6 +3,12 @@
 #include <QUuid>
 #include <QFileInfo>
 #include <QJsonArray>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#define SOCKET_ERROR_SIGNAL &QAbstractSocket::errorOccurred
+#else
+#define SOCKET_ERROR_SIGNAL static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error)
+#endif
 #include "../db/DatabaseManager.h"
 
 NetworkManager &NetworkManager::instance() {
@@ -151,7 +157,7 @@ void NetworkManager::addPeerManual(const QString &ip, quint16 port,
         flushQueuedMessages(peerId, conn);
     });
 
-    conns->errConn = connect(socket, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
+    conns->errConn = connect(socket, SOCKET_ERROR_SIGNAL,
             this, [conn, ip, port, callback, cleanup, conns](QAbstractSocket::SocketError err) {
         disconnect(conns->errConn);
         disconnect(conns->timeConn);
@@ -234,7 +240,7 @@ PeerConnection *NetworkManager::ensureConnection(int peerId) {
         flushQueuedMessages(peerId, conn);
     });
 
-    connect(socket, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
+    connect(socket, SOCKET_ERROR_SIGNAL,
             this, [this, peerId](QAbstractSocket::SocketError) {
         DatabaseManager::instance().updatePeerStatus(peerId, false);
         emit peerOnlineStatusChanged(peerId, false);
@@ -423,7 +429,7 @@ void NetworkManager::pollAllPeers() {
             flushQueuedMessages(pId, conn);
         });
 
-        connect(socket, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
+        connect(socket, SOCKET_ERROR_SIGNAL,
                 this, [this, conn, pId](QAbstractSocket::SocketError) {
             DatabaseManager::instance().updatePeerStatus(pId, false);
             emit peerOnlineStatusChanged(pId, false);

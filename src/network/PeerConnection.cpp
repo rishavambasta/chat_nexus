@@ -7,6 +7,12 @@
 #include <QDebug>
 #include "../db/DatabaseManager.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#define SOCKET_ERROR_SIGNAL &QAbstractSocket::errorOccurred
+#else
+#define SOCKET_ERROR_SIGNAL static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error)
+#endif
+
 static const qint64 CHUNK_SIZE = 64 * 1024; // 64 KB per chunk
 static const qint64 MAX_SOCKET_BUFFER = 256 * 1024; // Throttling threshold
 
@@ -34,7 +40,7 @@ PeerConnection::PeerConnection(QTcpSocket *socket, QObject *parent)
 
         connect(m_socket, &QTcpSocket::readyRead, this, &PeerConnection::onReadyRead);
         connect(m_socket, &QTcpSocket::disconnected, this, &PeerConnection::onSocketDisconnected);
-        connect(m_socket, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(&QAbstractSocket::error),
+        connect(m_socket, SOCKET_ERROR_SIGNAL,
                 this, &PeerConnection::onSocketError);
         connect(m_socket, &QTcpSocket::bytesWritten, this, &PeerConnection::onBytesWritten);
     }

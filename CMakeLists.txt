@@ -9,11 +9,16 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 # Default to user-specified Qt directory if CMAKE_PREFIX_PATH not set
-if(NOT DEFINED CMAKE_PREFIX_PATH AND EXISTS "/run/media/rishav/DS1/qt/qt5.15/5.14.2/gcc_64")
-    set(CMAKE_PREFIX_PATH "/run/media/rishav/DS1/qt/qt5.15/5.14.2/gcc_64")
+if(NOT DEFINED CMAKE_PREFIX_PATH)
+    if(WIN32 AND EXISTS "/run/media/rishav/DS1/prog/chat/qt_win/6.5.3/mingw_64")
+        set(CMAKE_PREFIX_PATH "/run/media/rishav/DS1/prog/chat/qt_win/6.5.3/mingw_64")
+    elseif(EXISTS "/run/media/rishav/DS1/qt/qt5.15/5.14.2/gcc_64")
+        set(CMAKE_PREFIX_PATH "/run/media/rishav/DS1/qt/qt5.15/5.14.2/gcc_64")
+    endif()
 endif()
 
-find_package(Qt5 COMPONENTS Core Widgets Network Sql REQUIRED)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Network Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets Network Sql)
 
 set(SOURCES
     src/main.cpp
@@ -55,26 +60,38 @@ set(RESOURCES
 add_executable(P2PChat ${SOURCES} ${HEADERS} ${RESOURCES})
 
 target_link_libraries(P2PChat PRIVATE
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::Sql
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::Sql
 )
 
+if(WIN32)
+    target_link_libraries(P2PChat PRIVATE ws2_32 wsock32)
+endif()
+
 # Tests
-enable_testing()
-find_package(Qt5 COMPONENTS Test REQUIRED)
-add_executable(test_p2p
-    tests/test_p2p.cpp
-    src/db/DatabaseManager.cpp
-    src/network/PeerConnection.cpp
-    src/network/NetworkManager.cpp
-)
-target_link_libraries(test_p2p PRIVATE
-    Qt5::Core
-    Qt5::Widgets
-    Qt5::Network
-    Qt5::Sql
-    Qt5::Test
-)
-add_test(NAME test_p2p COMMAND test_p2p)
+option(BUILD_TESTS "Build tests" ON)
+if(BUILD_TESTS)
+    enable_testing()
+    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Test QUIET)
+    if(Qt${QT_VERSION_MAJOR}Test_FOUND)
+        add_executable(test_p2p
+            tests/test_p2p.cpp
+            src/db/DatabaseManager.cpp
+            src/network/PeerConnection.cpp
+            src/network/NetworkManager.cpp
+        )
+        target_link_libraries(test_p2p PRIVATE
+            Qt${QT_VERSION_MAJOR}::Core
+            Qt${QT_VERSION_MAJOR}::Widgets
+            Qt${QT_VERSION_MAJOR}::Network
+            Qt${QT_VERSION_MAJOR}::Sql
+            Qt${QT_VERSION_MAJOR}::Test
+        )
+        if(WIN32)
+            target_link_libraries(test_p2p PRIVATE ws2_32 wsock32)
+        endif()
+        add_test(NAME test_p2p COMMAND test_p2p)
+    endif()
+endif()

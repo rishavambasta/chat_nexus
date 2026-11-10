@@ -99,21 +99,47 @@ chat/
 
 ## Building the Application
 
-Qt 5 is located at `/run/media/rishav/DS1/qt/qt5.15/5.14.2/gcc_64`.
+### Linux Build (Qt 5.15 / 5.14.2)
 
-### Option A: Using the `build.sh` script (qmake)
+Qt 5 on Linux is located at `/run/media/rishav/DS1/qt/qt5.15/5.14.2/gcc_64`.
 
+#### Option A: Using the `build.sh` script (qmake)
 ```bash
 ./build.sh
 ```
 
-### Option B: Using CMake
-
+#### Option B: Using CMake
 ```bash
 mkdir -p build && cd build
 cmake .. -DCMAKE_PREFIX_PATH="/run/media/rishav/DS1/qt/qt5.15/5.14.2/gcc_64"
 make -j$(nproc)
 ```
+
+---
+
+### Windows Build & Packaging (Qt 6.5.3 MinGW 64-bit)
+
+Qt 6.5.3 for Windows is located at `/run/media/rishav/DS1/prog/chat/qt_win/6.5.3/mingw_64`.
+MinGW GCC 11.5 toolchain is located at `/run/media/rishav/DS1/prog/chat/tools/gcc-mingw`.
+
+To build the Windows executable and deploy a complete, standalone distribution:
+
+```bash
+./build_windows.sh
+```
+
+This compiles:
+- `P2PChat.exe` (main Windows GUI binary)
+- `test_p2p.exe` (Windows unit and integration test binary)
+
+And bundles everything into `dist_windows/`:
+- `P2PChat.exe`
+- All required Qt6 DLLs (`Qt6Core.dll`, `Qt6Gui.dll`, `Qt6Widgets.dll`, `Qt6Network.dll`, `Qt6Sql.dll`, `Qt6Svg.dll`)
+- MinGW runtime libraries (`libwinpthread-1.dll`, `libstdc++-6.dll`, `libgcc_s_seh-1.dll`)
+- Qt plugins (`platforms/qwindows.dll`, `sqldrivers/qsqlite.dll`, `styles/qwindowsvistastyle.dll`, `imageformats/`, etc.)
+- Launcher batch script `run_p2pchat.bat`
+
+The `dist_windows/` folder can be copied directly to any 64-bit Windows machine and run with zero external installation!
 
 ---
 
